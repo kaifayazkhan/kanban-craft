@@ -3,6 +3,7 @@ import Card from './card';
 import ListActions from '../modals/list-actions';
 import AddCard from './add-card';
 import { useBoardStore } from '@/store/useBoardStore';
+import { ScrollArea, ScrollBar } from '../ui/scroll-area';
 
 interface ListProps {
   listId: string;
@@ -18,10 +19,13 @@ export default function List({ listId }: ListProps) {
         <h3 className='text-lg font-semibold'>{title}</h3>
         <ListActions listId={listId} />
       </div>
-      <div className='mt-6 flex flex-col gap-4'>
-        {cardIds?.map((item) => <Card key={item} cardId={item} />)}
-        <AddCard listId={listId} />
-      </div>
+      <ScrollArea>
+        <ScrollBar orientation='vertical' />
+        <div className='mt-6 flex max-h-[70dvh] flex-col gap-4'>
+          {cardIds?.map((item) => <Card key={item} cardId={item} />)}
+          <AddCard listId={listId} />
+        </div>
+      </ScrollArea>
     </div>
   );
 }
