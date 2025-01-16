@@ -6,6 +6,7 @@ import {
   EditorCommandItem,
   EditorCommandList,
   EditorContent,
+  EditorInstance,
   EditorRoot,
 } from 'novel';
 
@@ -40,11 +41,10 @@ export default function Editor({ initialValue, onChange }: EditorProps) {
 
   const debounceTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  const handleUpdate = ({ editor }: any) => {
+  const handleUpdate = ({ editor }: { editor: EditorInstance }) => {
     if (debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-
     debounceTimeout.current = setTimeout(() => {
       const json = editor.getJSON();
       onChange(JSON.stringify(json)); // Call onChange after the user stops typing
