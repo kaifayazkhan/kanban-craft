@@ -1,9 +1,23 @@
+'use client';
 import React from 'react';
+import Image from 'next/image';
 import { Trash } from 'lucide-react';
 import { Button } from '../ui/button';
-import Image from 'next/image';
+import { BOARD_ID, useBoardStore } from '@/store/useBoardStore';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Header() {
+  const resetBoard = useBoardStore((state) => state.removeBoard);
+  const { toast } = useToast();
+
+  const handleResetBoard = () => {
+    resetBoard(BOARD_ID);
+    toast({
+      description: 'The board has been successfully reset.',
+      variant: 'destructive',
+    });
+  };
+
   return (
     <header className='sticky top-0 z-10 bg-white'>
       <div className='container flex h-16 items-center justify-between'>
@@ -17,7 +31,7 @@ export default function Header() {
             priority
           />
         </div>
-        <Button variant='destructive'>
+        <Button variant='destructive' onClick={handleResetBoard}>
           <Trash />
           Reset Board
         </Button>
