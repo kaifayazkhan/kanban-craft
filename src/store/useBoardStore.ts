@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist, devtools } from 'zustand/middleware';
 import { BoardDatatype, BoardTypes, CardTypes, ListTypes } from '@/lib/types';
 import { currentTimeStamp } from '@/lib/utils/timestamp';
+import { reorderArray, removeFromArray } from '@/lib/utils/arrayOperations';
 
 type AddActions = {
   addBoard: (data: Record<string, BoardTypes>) => void;
@@ -13,7 +14,7 @@ type UpdateActions = {
   updateBoard: (boardId: string, data: Partial<BoardTypes>) => void;
   updateList: (listId: string, data: Partial<ListTypes>) => void;
   updateCard: (cardId: string, data: Partial<CardTypes>) => void;
-  updateCardStatus: (cardId: string, destinationListId: string) => void;
+  updateCardStatus: (cardId: string, destinationListId: string, destinationIndex?: number) => void;
 };
 
 type RemoveActions = {
@@ -22,12 +23,19 @@ type RemoveActions = {
   removeCard: (cardId: string) => void;
 };
 
-type BoardAction = AddActions & UpdateActions & RemoveActions;
+type ReorderActions = {
+  reorderList: (sourceIndex: number, destinationIndex: number, boardId: string) => void;
+  reorderCard: (sourceIndex: number, destinationIndex: number, listId: string) => void;
+};
+
+type BoardAction = AddActions & UpdateActions & RemoveActions & ReorderActions;
+
+export const BOARD_ID = 'board-1' as const;
 
 const initialState: BoardDatatype = {
   boards: {
-    'board-1': {
-      id: 'board-1',
+    [BOARD_ID]: {
+      id: BOARD_ID,
       title: 'Project Board',
       listIds: [],
       createdAt: currentTimeStamp(),
@@ -36,7 +44,7 @@ const initialState: BoardDatatype = {
   },
   lists: {},
   cards: {},
-};
+} as const;
 
 type BoardType = BoardDatatype & BoardAction;
 
@@ -101,34 +109,39 @@ export const useBoardStore = create<BoardType>()(
             };
           }),
 
-        updateCardStatus: (cardId, destinationListId) =>
+        updateCardStatus: (cardId, destinationListId, destinationIndex) =>
           set((state) => {
-            if (!state.cards[cardId]) throw new Error(`Card with id ${cardId} does not exist`);
+            const card = state.cards[cardId];
+            if (!card) throw new Error(`Card with id ${cardId} does not exist`);
+            if (card.listId === destinationListId) return state;
 
-            const currentCardData = {
-              ...state.cards[cardId],
-            };
+            const currentListId = card.listId;
+            const destinationCardIds = [...state.lists[destinationListId].cardIds];
 
-            if (currentCardData.listId === destinationListId) return state;
-
-            const currentListId = currentCardData.listId;
+            if (destinationIndex !== undefined) {
+              destinationCardIds.splice(destinationIndex, 0, cardId);
+            } else {
+              destinationCardIds.push(cardId);
+            }
 
             return {
               lists: {
                 ...state.lists,
                 [currentListId]: {
                   ...state.lists[currentListId],
-                  cardIds: state.lists[currentListId].cardIds.filter((id) => id !== cardId),
+                  cardIds: removeFromArray(state.lists[currentListId].cardIds, cardId),
+                  updatedAt: currentTimeStamp(),
                 },
                 [destinationListId]: {
                   ...state.lists[destinationListId],
-                  cardIds: [...state.lists[destinationListId].cardIds, cardId],
+                  cardIds: destinationCardIds,
+                  updatedAt: currentTimeStamp(),
                 },
               },
               cards: {
                 ...state.cards,
                 [cardId]: {
-                  ...currentCardData,
+                  ...card,
                   listId: destinationListId,
                   status: destinationListId,
                   updatedAt: currentTimeStamp(),
@@ -139,36 +152,42 @@ export const useBoardStore = create<BoardType>()(
 
         removeBoard: (id) =>
           set((state) => {
-            const {
-              [id]: {},
-              ...remainingBoards
-            } = state.boards;
-            const listIds = state.boards[id].listIds;
+            const { [id]: removeBoard, ...remainingBoards } = state.boards;
+            const listIds = removeBoard.listIds;
+            // Remove all associated lists of the board
             listIds.forEach((item) => {
               state.removeList(item);
             });
-            return { boards: remainingBoards };
+            return {
+              boards: {
+                // Reset the deleted board to its initial state (empty lists)
+                // to maintain the current flow where the same board is displayed on the home page.
+                [removeBoard.id]: {
+                  ...removeBoard,
+                  listIds: [],
+                },
+                ...remainingBoards,
+              },
+            };
           }),
 
         removeList: (id) =>
           set((state) => {
-            const {
-              [id]: {},
-              ...remainingLists
-            } = state.lists;
-            const currentList = state.lists[id];
-            const boardList = state.boards[currentList.boardId].listIds.filter(
-              (item) => item !== id,
-            );
-            const updatedBoard = { ...state.boards[currentList.boardId], listIds: boardList };
-            const cardIds = state.lists[id].cardIds;
-            cardIds.forEach((item) => {
+            const { [id]: removedList, ...remainingLists } = state.lists;
+            const boardId = removedList.boardId;
+
+            // Remove all associated cards of the list
+            removedList.cardIds.forEach((item) => {
               state.removeCard(item);
             });
+
             return {
               boards: {
                 ...state.boards,
-                [currentList.boardId]: updatedBoard,
+                [boardId]: {
+                  ...state.boards[boardId],
+                  listIds: removeFromArray(state.boards[boardId].listIds, id),
+                },
               },
               lists: remainingLists,
             };
@@ -176,18 +195,45 @@ export const useBoardStore = create<BoardType>()(
 
         removeCard: (cardId) =>
           set((state) => {
-            const {
-              [cardId]: {},
-              ...remainingCards
-            } = state.cards;
-            const currentListId = state.cards[cardId].listId;
+            const { [cardId]: removedCard, ...remainingCards } = state.cards;
+            const currentListId = removedCard.listId;
             return {
               cards: remainingCards,
               lists: {
                 ...state.lists,
                 [currentListId]: {
                   ...state.lists[currentListId],
-                  cardIds: state.lists[currentListId].cardIds.filter((id) => id !== cardId),
+                  cardIds: removeFromArray(state.lists[currentListId].cardIds, cardId),
+                },
+              },
+            };
+          }),
+
+        reorderList: (sourceIndex, destinationIndex, boardId) =>
+          set((state) => {
+            return {
+              boards: {
+                ...state.boards,
+                [boardId]: {
+                  ...state.boards[boardId],
+                  listIds: reorderArray(
+                    state.boards[boardId].listIds,
+                    sourceIndex,
+                    destinationIndex,
+                  ),
+                },
+              },
+            };
+          }),
+        reorderCard: (sourceIndex, destinationIndex, listId) =>
+          set((state) => {
+            return {
+              lists: {
+                ...state.lists,
+                [listId]: {
+                  ...state.lists[listId],
+                  cardIds: reorderArray(state.lists[listId].cardIds, sourceIndex, destinationIndex),
+                  updatedAt: currentTimeStamp(),
                 },
               },
             };
@@ -196,7 +242,11 @@ export const useBoardStore = create<BoardType>()(
       {
         name: 'board-store',
         storage: createJSONStorage(() => localStorage),
-        partialize: (state) => ({ boards: state.boards, lists: state.lists, cards: state.cards }),
+        partialize: (state) => ({
+          boards: state.boards,
+          lists: state.lists,
+          cards: state.cards,
+        }),
       },
     ),
   ),
