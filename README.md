@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kanban Craft - A Task Management App
 
-## Getting Started
+Kanban Craft is a simple task management application that helps users organize and manage their tasks using a drag-and-drop Kanban board.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Drag and Drop**: Move cards between lists and reorder both lists and cards within the board.
+- **Task Management**: Add, edit, or delete tasks within each list.
+- **Rich Text Editor**: Enter `/` to select and apply various formats such as headings, subheadings, to-dos, and more for detailed task descriptions.
+- **Responsive UI**: Fully responsive and optimized for various screen sizes.
+- **Persistent Data Storage**: Tasks are saved to localStorage for persistence across sessions.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Frontend**: Next.js
+- **State Management**: Zustand
+- **Drag and Drop**: `@hello-pangea/dnd`
+- **Text Editor**: `novel`
+- **Styling**: TailwindCSS
+- **UI Library**: shadcn/ui
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Running the Project
 
-## Learn More
+To run the project locally, follow the steps below:
 
-To learn more about Next.js, take a look at the following resources:
+1. Clone the repository:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   ```bash
+   git clone https://github.com/kaifayazkhan/kanban-craft
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. Run `npm install` or `pnpm install` in the project directory to install the required dependencies.
+3. Run `npm run start` or `pnpm start` to get the project started.
+4. Open your browser and visit http://localhost:3000 to see the app in action.
 
-## Deploy on Vercel
+## Future Enhancements
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **User Authentication**: Secure login for users to track their tasks and preferences.
+- **Backend Integration**: Transition to using a backend for data persistence.
+- **Advanced Task Filters**: Search and filter tasks based on due dates, priority, etc.
+- **Push Notifications**: Notify users of task changes or deadlines.
+- **Multiple Workspaces**: Allow users to create and manage multiple workspaces.
