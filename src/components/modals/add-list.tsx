@@ -21,11 +21,15 @@ interface AddListProps {
 }
 
 export default function AddList({ boardId }: AddListProps) {
+  const boards = useBoardStore((state) => state.boards);
+  const addList = useBoardStore((state) => state.addList);
+  const updateBoard = useBoardStore((state) => state.updateBoard);
+
   const [listName, setListName] = useState<string>('');
-  const { boards, updateBoard, addList } = useBoardStore((state) => state);
 
   const handleAddList = () => {
     const newListId = crypto.randomUUID();
+    if (listName.trim() === '') return;
 
     const newListData: ListTypes = {
       id: newListId,
@@ -68,7 +72,12 @@ export default function AddList({ boardId }: AddListProps) {
             </Button>
           </DialogClose>
           <DialogClose asChild>
-            <Button type='button' variant='primary' onClick={handleAddList}>
+            <Button
+              type='button'
+              variant='primary'
+              onClick={handleAddList}
+              disabled={listName === ''}
+            >
               Save
             </Button>
           </DialogClose>

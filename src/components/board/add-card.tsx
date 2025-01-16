@@ -17,7 +17,10 @@ export default function AddCard({ listId }: AddCardProps) {
   const toggleAddCard = () => setAddCard((prev) => !prev);
 
   const handleAddCard = () => {
-    if (title.trim() === '') return;
+    if (title.trim() === '') {
+      toggleAddCard();
+      return;
+    }
     const newCardId = crypto.randomUUID();
 
     const newCardData: CardTypes = {
@@ -56,7 +59,9 @@ export default function AddCard({ listId }: AddCardProps) {
             <Button variant='outline' onClick={toggleAddCard}>
               Cancel
             </Button>
-            <Button onClick={handleAddCard}>Save</Button>
+            <Button onClick={handleAddCard} disabled={title === ''}>
+              Save
+            </Button>
           </div>
         </div>
       ) : (

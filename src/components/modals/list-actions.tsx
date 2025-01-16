@@ -45,7 +45,10 @@ export default function ListActions({ listId }: ListActionsProps) {
   const toggleDeleteDialog = () => setDeleteDialogOpen((prev) => !prev);
 
   const handleUpdateList = () => {
-    updateList(listId, { title: updatedListName });
+    if (updatedListName.trim() === '') return;
+    updateList(listId, {
+      title: updatedListName,
+    });
   };
 
   const handleDeleteList = () => {
@@ -76,9 +79,9 @@ export default function ListActions({ listId }: ListActionsProps) {
       <Dialog>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='size-8 p-0'>
+            <Button variant='ghost' className='m-0 p-0'>
               <span className='sr-only'>Open menu</span>
-              <MoreVertical />
+              <MoreVertical className='size-8' />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
