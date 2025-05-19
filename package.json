@@ -28,7 +28,7 @@
     "date-fns": "^4.1.0",
     "eslint-plugin-tailwindcss": "^3.17.5",
     "lucide-react": "^0.471.1",
-    "next": "15.1.4",
+    "next": "15.2.4",
     "novel": "^0.5.0",
     "react": "^19.0.0",
     "react-day-picker": "8.10.1",
